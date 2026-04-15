@@ -1,169 +1,123 @@
-# 🎓 KCET College Predictor
+# KCET College Predictor
 
-A terminal-based Machine Learning project that predicts eligible colleges
-based on **KCET rank, branch, and category** using historical cutoff data.
+This project builds a **2026 cutoff predictor** from KCET cutoff data for
+**2021-2025**. Instead of returning raw rows from mixed historical years, it
+projects a single `Pred 2026` cutoff for each college, branch, and category
+combination, then compares your rank against that projected value.
 
----
+## How It Works
 
-## 📂 Folder Structure
+1. PDFs in `data/raw/` are extracted into raw CSVs.
+2. Raw CSVs are cleaned into yearly cutoff tables.
+3. Clean yearly files are merged into `data/final/kcet_master.csv`.
+4. `train_model.py` reads the master CSV and builds a trend-based 2026 model.
+5. `app/main.py` loads the saved model bundle and shows projected colleges.
 
-```
+The saved bundle at `models/kcet_model.pkl` contains:
+- `trend_df`: the projected 2026 cutoff table
+- `metadata`: year range, target year, and basic counts
+
+## Project Structure
+
+```text
 KCET-College-Predictor/
-│
+├── app/
+│   └── main.py
 ├── data/
-│   ├── raw/              ← Place your KCET PDFs here
-│   ├── extracted/        ← Auto-generated raw CSVs
-│   ├── cleaned/          ← Auto-generated clean CSVs
-│   └── final/            ← kcet_master.csv (merged dataset)
-│
+│   ├── raw/
+│   ├── extracted/
+│   ├── cleaned/
+│   └── final/
+├── models/
+├── notebooks/
 ├── src/
 │   ├── data/
-│   │   ├── __init__.py
-│   │   ├── extract_pdf.py    ← Step 1: PDF → CSV
-│   │   ├── clean_data.py     ← Step 2: clean raw CSVs
-│   │   ├── merge_data.py     ← Step 3: combine years
-│   │   └── transform.py      ← Feature engineering (used internally)
-│   │
-│   ├── model/
-│   │   ├── __init__.py
-│   │   ├── train_model.py    ← Step 4: train + save model
-│   │   └── predictor.py      ← Prediction engine (lookup + ML)
-│   │
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   └── helpers.py        ← Shared utilities
-│   │
-│   └── __init__.py
-│
-├── models/
-│   └── kcet_model.pkl        ← Saved model bundle
-│
-├── app/
-│   └── main.py               ← Terminal UI (the app you run)
-│
-├── notebooks/
-│   └── data_exploration.ipynb
-│
-├── config.py                 ← Central paths + constants
-├── run_pipeline.py           ← One-shot pipeline runner
-├── requirements.txt
-└── README.md
+│   │   ├── extract_pdf.py
+│   │   ├── clean_data.py
+│   │   ├── merge_data.py
+│   │   └── transform.py
+│   └── model/
+│       ├── predictor.py
+│       └── train_model.py
+├── config.py
+├── run_pipeline.py
+├── view_model.py
+└── requirements.txt
 ```
 
----
-
-## ⚙️ Setup
+## Setup
 
 ```bash
-# 1. Clone
-git clone https://github.com/your-username/kcet-college-predictor.git
-cd kcet-college-predictor
-
-# 2. Virtual environment
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-
-# 3. Install dependencies
+.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
----
+## Run The Project
 
-## 🚀 Quick Start
+Full rebuild from cleaned data onward:
 
-### Full pipeline (PDF → prediction)
+```bash
+python src/data/merge_data.py
+python src/model/train_model.py
+python app/main.py
+```
+
+Full pipeline from PDFs:
 
 ```bash
 python run_pipeline.py
 ```
 
-### Step by step
+Run only the app with the latest saved model:
 
 ```bash
-# Step 1 — Extract tables from PDFs in data/raw/
-python src/data/extract_pdf.py
-
-# Step 2 — Clean extracted CSVs
-python src/data/clean_data.py
-
-# Step 3 — Merge all years into one master CSV
-python src/data/merge_data.py
-
-# Step 4 — Train and save model
-python src/model/train_model.py
-
-# Step 5 — Launch terminal predictor
 python app/main.py
 ```
 
-### Skip to prediction (if model already trained)
+## Inspect The Saved Model
+
+Use the helper script:
 
 ```bash
-python run_pipeline.py --predict-only
+python view_model.py
 ```
 
----
+Show more projected rows:
 
-## 🧠 How Predictions Work
-
-The predictor uses a **two-stage engine**:
-
-1. **Direct Lookup** — Queries the master cutoff table for colleges where  
-   `cutoff_rank ≥ student_rank` in the given branch + category.  
-   Results are sorted by the smallest gap (safest pick first).
-
-2. **ML Fallback** — If no exact match is found (e.g. rare category),  
-   a Random Forest model trained on all historical data predicts  
-   the most likely colleges by probability.
-
-The model bundle (`models/kcet_model.pkl`) stores:
-- Label encoders for Branch, Category, College
-- Trained `RandomForestClassifier` (300 trees, balanced classes)
-- The full master DataFrame for fast lookup
-
----
-
-## 🖥 Terminal UI Example
-
-```
-════════════════════════════════════════════════════════════
-  🎓  KCET College Predictor
-════════════════════════════════════════════════════════════
-
-  Enter your KCET Rank: 12500
-  Enter Branch: Computer Science Engineering
-  Enter Category: GM
-  How many results? [Enter for 10]: 
-
-  ✔  8 college(s) found:
-
-  ╭────┬──────┬──────────────────────────────┬────────────────┬─────────┬─────╮
-  │  # │ Code │ College Name                 │ Branch         │ Cutoff  │ Gap │
-  ├────┼──────┼──────────────────────────────┼────────────────┼─────────┼─────┤
-  │  1 │ E123 │ ABC Institute of Technology  │ Computer Sci…  │ 12610   │ 110 │
-  │  2 │ E045 │ XYZ Engineering College      │ Computer Sci…  │ 13200   │ 700 │
-  ...
-  ╰────┴──────┴──────────────────────────────┴────────────────┴─────────┴─────╯
+```bash
+python view_model.py --rows 20
 ```
 
----
+## What The App Shows
 
-## 📊 Technologies
+Each result row now represents a projected 2026 cutoff, not a raw historical row.
 
-| Layer        | Tool                          |
-|--------------|-------------------------------|
-| PDF Extract  | `tabula-py`                   |
-| Data Wrangling | `pandas`, `numpy`           |
-| ML Model     | `scikit-learn` RandomForest   |
-| Model Storage | `joblib`                     |
-| Terminal UI  | `colorama`, `tabulate`        |
+- `Pred 2026`: estimated cutoff for 2026
+- `Last Year`: most recent year available for that combo
+- `Years`: how many historical years were available for that combo
+- `Gap`: `Pred 2026 - your rank`
 
----
+Smaller positive gaps are closer, more competitive options. Larger gaps are safer.
 
-## 🚀 Future Improvements
+## Supported Category Codes
 
-- Web interface (FastAPI + React)
-- Cutoff trend charts per college
-- Seat availability integration
-- Category-wise separate models
-- Docker + cloud deployment
+`GM`, `GMK`, `GMR`, `SCG`, `SCK`, `SCR`, `STG`, `STK`, `STR`,
+`1G`, `1K`, `1R`, `2AG`, `2AK`, `2AR`, `2BG`, `2BK`, `2BR`,
+`3AG`, `3AK`, `3AR`, `3BG`, `3BK`, `3BR`
+
+The app also resolves common branch aliases like `CSE`, `ISE`, `IE`, `ECE`,
+`AI`, and `Civil`.
+
+## Notes
+
+- If you change the source data, rerun `python src/model/train_model.py`.
+- Predictions are only as strong as the available history.
+- Combos with more historical years are generally more reliable than one-year combos.
+
+## Technologies
+
+- `pdfplumber` for PDF extraction
+- `pandas` and `numpy` for cleaning and trend projection
+- `joblib` for model bundle storage
+- `colorama` and `tabulate` for terminal output

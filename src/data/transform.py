@@ -1,10 +1,9 @@
 # ─────────────────────────────────────────────
 #  src/data/transform.py
-#  Feature engineering — convert raw master CSV
-#  into ML-ready feature matrix + label encoders
+#  Master dataset loading and validation helpers
 # ─────────────────────────────────────────────
 """
-Called internally by train_model.py and predictor.py.
+Called internally by train_model.py.
 Not meant to be run standalone, but you can:
     python src/data/transform.py   (prints a preview)
 """
@@ -12,14 +11,27 @@ Not meant to be run standalone, but you can:
 import os
 import sys
 import pandas as pd
-import numpy as np
-from sklearn.preprocessing import LabelEncoder
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from config import MASTER_CSV
+
+
+def _filter_invalid_master_rows(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["College_Code"] = df["College_Code"].astype(str).str.strip()
+    df["College_Name"] = df["College_Name"].astype(str).str.strip()
+    df["Branch"] = df["Branch"].astype(str).str.strip()
+    df["Category"] = df["Category"].astype(str).str.strip().str.upper()
+
+    invalid_name_mask = df["College_Name"].str.lower().isin({"", "nan", "none"})
+    invalid_code_mask = df["College_Code"].str.upper().isin({"", "UNKNOWN", "NAN", "NONE"})
+    invalid_branch_mask = df["Branch"].str.lower().isin({"", "nan", "none", "college:", "generated"})
+    invalid_category_mask = df["Category"].str.lower().isin({"", "nan", "none"})
+
+    return df[~(invalid_name_mask | invalid_code_mask | invalid_branch_mask | invalid_category_mask)].copy()
 
 
 # ─────────────────────────────────────────────
@@ -32,65 +44,15 @@ def load_master() -> pd.DataFrame:
     df = pd.read_csv(MASTER_CSV)
     df["Cutoff_Rank"] = pd.to_numeric(df["Cutoff_Rank"], errors="coerce")
     df.dropna(subset=["Cutoff_Rank", "Branch", "Category", "College_Code"], inplace=True)
+    df = _filter_invalid_master_rows(df)
     return df
-
-
-# ─────────────────────────────────────────────
-def build_encoders(df: pd.DataFrame) -> dict:
-    """
-    Fit LabelEncoders for Branch, Category, College_Code.
-    Returns a dict:  {'branch': le, 'category': le, 'college': le}
-    """
-    encoders = {}
-    for col, key in [("Branch", "branch"), ("Category", "category"), ("College_Code", "college")]:
-        le = LabelEncoder()
-        le.fit(df[col].astype(str))
-        encoders[key] = le
-    return encoders
-
-
-# ─────────────────────────────────────────────
-def build_features(df: pd.DataFrame, encoders: dict) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Returns (X, y) arrays ready for sklearn.
-
-    Features (X):
-        - Cutoff_Rank  (numeric)
-        - Branch       (label-encoded)
-        - Category     (label-encoded)
-        - Year         (numeric, 0 if missing)
-
-    Target (y):
-        - College_Code (label-encoded)
-    """
-    df = df.copy()
-
-    # Encode categoricals — unseen values fall back to 0
-    df["Branch_enc"]   = _safe_transform(encoders["branch"],   df["Branch"])
-    df["Category_enc"] = _safe_transform(encoders["category"], df["Category"])
-    df["College_enc"]  = _safe_transform(encoders["college"],  df["College_Code"])
-    df["Year"]         = pd.to_numeric(df.get("Year", 0), errors="coerce").fillna(0).astype(int)
-
-    X = df[["Cutoff_Rank", "Branch_enc", "Category_enc", "Year"]].values
-    y = df["College_enc"].values
-
-    return X, y
-
-
-# ─────────────────────────────────────────────
-def _safe_transform(le: LabelEncoder, series: pd.Series) -> pd.Series:
-    """Transform; unknown labels map to 0 instead of crashing."""
-    known = set(le.classes_)
-    mapped = series.astype(str).map(lambda v: v if v in known else le.classes_[0])
-    return le.transform(mapped)
 
 
 # ─────────────────────────────────────────────
 if __name__ == "__main__":
     df = load_master()
-    enc = build_encoders(df)
-    X, y = build_features(df, enc)
-    print(f"Feature matrix : {X.shape}")
-    print(f"Target classes : {len(enc['college'].classes_)} colleges")
-    print(f"Sample X row   : {X[0]}")
-    print(f"Sample y label : {enc['college'].classes_[y[0]]}")
+    print(f"Rows       : {len(df):,}")
+    print(f"Colleges   : {df['College_Code'].nunique()}")
+    print(f"Branches   : {df['Branch'].nunique()}")
+    print(f"Categories : {df['Category'].nunique()}")
+    print(f"Years      : {sorted(df['Year'].dropna().astype(int).unique().tolist())}")

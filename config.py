@@ -17,31 +17,30 @@ MASTER_CSV    = os.path.join(FINAL_DIR, "kcet_master.csv")
 MODEL_DIR     = os.path.join(BASE_DIR, "models")
 MODEL_PATH    = os.path.join(MODEL_DIR, "kcet_model.pkl")
 
-# ── Known categories (KCET standard) ─────────
+# ── Categories currently present in the merged dataset ──
 CATEGORIES = [
     "GM", "GMK", "GMR",
-    "SC", "SCK", "SCR",
-    "ST", "STK", "STR",
-    "OBC", "OBCK", "OBCR",
-    "1G", "1GK", "1GR",
-    "2AG", "2AGK", "2AGR",
-    "2BG", "2BGK", "2BGR",
-    "3AG", "3AGK", "3AGR",
-    "3BG", "3BGK", "3BGR",
+    "SCG", "SCK", "SCR",
+    "STG", "STK", "STR",
+    "1G", "1K", "1R",
+    "2AG", "2AK", "2AR",
+    "2BG", "2BK", "2BR",
+    "3AG", "3AK", "3AR",
+    "3BG", "3BK", "3BR",
 ]
 
-# ── Common KCET branches ──────────────────────
+# ── Common branch labels seen in the merged dataset ──
 BRANCHES = [
-    "Computer Science Engineering",
-    "Information Science Engineering",
-    "Electronics and Communication Engineering",
-    "Electrical and Electronics Engineering",
-    "Mechanical Engineering",
-    "Civil Engineering",
-    "Chemical Engineering",
-    "Biotechnology",
-    "Aerospace Engineering",
-    "Industrial Engineering",
-    "Instrumentation Technology",
-    "Medical Electronics",
+    "CS Computers",
+    "COMPUTER SCIENCE AND ENGINEERING",
+    "IE Info.Science",
+    "INFORMATION SCIENCE AND ENGINEERING",
+    "EC Electronics",
+    "ELECTRONICS AND COMMUNICATIO N ENGG",
+    "EE Electrical",
+    "ELECTRICAL & ELECTRONICS ENGINEERING",
+    "CE Civil",
+    "CIVIL ENGINEERING",
+    "ME Mechanical",
+    "AI Artificial Intelligence",
 ]

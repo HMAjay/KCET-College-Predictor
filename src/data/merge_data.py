@@ -33,6 +33,21 @@ def infer_year(filename: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
+def filter_invalid_rows(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["College_Code"] = df["College_Code"].astype(str).str.strip()
+    df["College_Name"] = df["College_Name"].astype(str).str.strip()
+    df["Branch"] = df["Branch"].astype(str).str.strip()
+    df["Category"] = df["Category"].astype(str).str.strip().str.upper()
+
+    invalid_name_mask = df["College_Name"].str.lower().isin({"", "nan", "none"})
+    invalid_code_mask = df["College_Code"].str.upper().isin({"", "UNKNOWN", "NAN", "NONE"})
+    invalid_branch_mask = df["Branch"].str.lower().isin({"", "nan", "none", "college:", "generated"})
+    invalid_category_mask = df["Category"].str.lower().isin({"", "nan", "none"})
+
+    return df[~(invalid_name_mask | invalid_code_mask | invalid_branch_mask | invalid_category_mask)].copy()
+
+
 # ─────────────────────────────────────────────
 def merge_all():
     ensure_dirs(CLEANED_DIR, FINAL_DIR)
@@ -66,6 +81,7 @@ def merge_all():
     # ── Quality checks ────────────────────────
     before = len(master)
     master.dropna(subset=["College_Code", "Branch", "Category", "Cutoff_Rank"], inplace=True)
+    master = filter_invalid_rows(master)
     master["Cutoff_Rank"] = pd.to_numeric(master["Cutoff_Rank"], errors="coerce")
     master.dropna(subset=["Cutoff_Rank"], inplace=True)
     master["Cutoff_Rank"] = master["Cutoff_Rank"].astype(int)

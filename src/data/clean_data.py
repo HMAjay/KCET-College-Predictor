@@ -119,7 +119,12 @@ def clean_file(file_path: str, year: int, pdf_path: str) -> pd.DataFrame:
         if 0 <= college_idx < len(college_list):
             current_code, current_name = college_list[college_idx]
         else:
-            current_code, current_name = "UNKNOWN", ""
+            continue
+
+        if not current_code or str(current_code).strip().upper() == "UNKNOWN":
+            continue
+        if not current_name or str(current_name).strip().lower() == "nan":
+            continue
 
         branch_name = first.replace("\n", " ").strip()
 
