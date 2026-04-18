@@ -39,7 +39,12 @@ BRANCH_ALIASES = {
     "ce": "civil engineering",
     "me": "mechanical engineering",
     "ai": "artificial intelligence",
+    "aiml": "artificial intelligence and machine learning",
     "ml": "machine learning",
+    "etce": "electronics telecommunication engineering",
+    "telecommunic": "telecommunication",
+    "instrumentati": "instrumentation",
+    "bio": "biotechnology",
     "it": "information technology",
     "engg": "engineering",
     "engg.": "engineering",
@@ -54,6 +59,25 @@ BRANCH_ALIASES = {
     "machi": "machine",
     "learni": "learning",
     "engg(": "engineering",
+}
+
+PREFERRED_BRANCH_CODES = {
+    "computer science engineering": "CSE",
+    "information science engineering": "ISE",
+    "computer science engineering artificial intelligence and machine learning": "CSE-AIML",
+    "b tech in computer science engineering artificial intelligence and machine learning": "CSE-AIML",
+    "artificial intelligence and machine learning": "AIML",
+    "electronics and communication engineering": "ECE",
+    "electronics and telecommunication engineering": "ETCE",
+    "electronics and instrumentation engineering": "EIE",
+    "electrical and electronics engineering": "EEE",
+    "mechanical engineering": "ME",
+    "civil engineering": "CE",
+    "artificial intelligence": "AI",
+    "biotechnology": "BT",
+    "computer science and design": "CSD",
+    "computer science and business systems": "CSBS",
+    "aeronautical engineering": "AE",
 }
 
 STOPWORDS = {
@@ -166,8 +190,12 @@ def _tokenize(value: str) -> set[str]:
 def _canonical_branch(value: str) -> str:
     raw_value = str(value).strip()
     stripped_value = _strip_branch_code(raw_value)
-    normalized = _normalize_text(stripped_value)
-    tokens = _tokenize(stripped_value)
+    if stripped_value:
+        normalized = _normalize_text(stripped_value)
+        tokens = _tokenize(stripped_value)
+    else:
+        normalized = _normalize_text(raw_value)
+        tokens = _tokenize(raw_value)
 
     if raw_value.lower() in INVALID_BRANCH_VALUES or stripped_value.lower() in INVALID_BRANCH_VALUES:
         return ""
@@ -177,19 +205,27 @@ def _canonical_branch(value: str) -> str:
         {"artificial", "intelligence"} <= tokens and
         {"machine", "learning"} <= tokens
     ):
-        return "B Tech in Computer Science(AI &ML)"
+        return "Computer Science Engineering Artificial Intelligence and Machine Learning"
+    if {"electronics", "telecommunication", "engineering"} <= tokens:
+        return "Electronics and Telecommunication Engineering"
     if {"artificial", "intelligence", "machine", "learning"} <= tokens:
         return "Artificial Intelligence and Machine Learning"
     if {"information", "science"} <= tokens:
         return "Information Science Engineering"
     if {"computer", "science", "engineering"} <= tokens:
         return "Computer Science Engineering"
+    if {"electronics", "telecommunication", "engineering"} <= tokens:
+        return "Electronics and Telecommunication Engineering"
+    if {"electronics", "instrumentation", "engineering"} <= tokens:
+        return "Electronics and Instrumentation Engineering"
     if {"electronics", "communication"} <= tokens:
         return "Electronics and Communication Engineering"
     if {"electrical", "electronics"} <= tokens:
         return "Electrical and Electronics Engineering"
     if {"civil", "engineering"} <= tokens:
         return "Civil Engineering"
+    if {"biotechnology"} <= tokens:
+        return "Biotechnology"
     if {"mechanical", "engineering"} <= tokens:
         return "Mechanical Engineering"
     if {"artificial", "intelligence"} <= tokens and "computer" not in tokens:
@@ -199,6 +235,10 @@ def _canonical_branch(value: str) -> str:
         return "Information Science Engineering"
     if normalized == "computer science engineering":
         return "Computer Science Engineering"
+    if normalized == "computer science engineering artificial intelligence and machine learning":
+        return "B Tech in Computer Science Engineering Artificial Intelligence and Machine Learning"
+    if normalized == "electronics telecommunication engineering":
+        return "Electronics and Telecommunication Engineering"
     if normalized == "electronics communication engineering":
         return "Electronics and Communication Engineering"
     if normalized == "electrical electronics engineering":
@@ -226,6 +266,13 @@ def _display_college_name(names: pd.Series) -> str:
         return ""
     clean_names = sorted(set(clean_names), key=lambda name: (len(name), name))
     return clean_names[0]
+
+
+def _preferred_branch_code(branch_name: str, branch_code: str = "") -> str:
+    display_code = PREFERRED_BRANCH_CODES.get(branch_name.lower().strip())
+    if display_code:
+        return display_code
+    return str(branch_code).strip()
 
 
 def _code_candidate_score(raw_branch: str, canonical_branch: str) -> float:
@@ -539,8 +586,14 @@ class KCETPredictor:
             .fillna("")
         )
         enriched.drop(columns=["Preferred_Branch_Code"], inplace=True)
+        enriched["Branch_Code"] = enriched.apply(
+            lambda row: _preferred_branch_code(row["Branch"], row["Branch_Code"]),
+            axis=1,
+        )
         enriched["Branch_Option"] = enriched.apply(
-            lambda row: f"{row['Branch_Code']} - {row['Branch']}" if str(row["Branch_Code"]).strip() else row["Branch"],
+            lambda row: f"{row['Branch_Code']} - {row['Branch']}"
+            if str(row["Branch_Code"]).strip()
+            else row["Branch"],
             axis=1,
         )
         return enriched
