@@ -726,14 +726,31 @@ class KCETPredictor:
 
         recent_years = years[-3:]
         recent_cutoffs = cutoffs[-3:]
-        recent_delta = float(cutoffs[-1] - cutoffs[-2])
+
+        consecutive_start = len(years) - 1
+        while (
+            consecutive_start > 0 and
+            int(years[consecutive_start]) - int(years[consecutive_start - 1]) == 1
+        ):
+            consecutive_start -= 1
+        consecutive_cutoffs = cutoffs[consecutive_start:]
+        consecutive_len = len(consecutive_cutoffs)
+
+        recent_year_gap = max(1, int(years[-1] - years[-2]))
+        recent_delta = float(cutoffs[-1] - cutoffs[-2]) / recent_year_gap
         max_recent_step = max(
-            last_cutoff * 0.20,
+            last_cutoff * 0.12,
             abs(last_cutoff * fallback_pct),
-            2500.0,
+            1500.0,
         )
         capped_recent_delta = float(np.clip(recent_delta, -max_recent_step, max_recent_step))
         naive_projection = last_cutoff + capped_recent_delta
+
+        if consecutive_len >= 2:
+            anchor_weights = np.linspace(1.5, 3.0, consecutive_len)
+            recent_anchor = float(np.average(consecutive_cutoffs, weights=anchor_weights))
+        else:
+            recent_anchor = last_cutoff
 
         if len(recent_years) >= 2:
             centered_recent_years = recent_years - recent_years.mean()
@@ -743,30 +760,43 @@ class KCETPredictor:
         else:
             recent_trend_projection = naive_projection
 
+        base_projection = last_cutoff * (1.0 + fallback_pct)
         if len(years) >= 4:
-            all_weights = np.linspace(0.5, 1.5, len(years))
+            all_weights = np.linspace(0.3, 1.0, len(years))
             centered_years = years - years.mean()
             slope, intercept = np.polyfit(centered_years, cutoffs, deg=1, w=all_weights)
             long_trend_projection = intercept + slope * (self.target_year - years.mean())
-            predicted = (
-                recent_trend_projection * 0.55 +
-                naive_projection * 0.25 +
-                long_trend_projection * 0.10 +
-                (last_cutoff * (1.0 + fallback_pct)) * 0.10
-            )
         elif len(years) == 3:
+            long_trend_projection = None
+        else:
+            long_trend_projection = None
+
+        if consecutive_len >= 3:
             predicted = (
-                recent_trend_projection * 0.60 +
-                naive_projection * 0.25 +
-                (last_cutoff * (1.0 + fallback_pct)) * 0.15
+                recent_anchor * 0.45 +
+                recent_trend_projection * 0.20 +
+                naive_projection * 0.15 +
+                base_projection * 0.15 +
+                (long_trend_projection * 0.05 if long_trend_projection is not None else 0.05 * recent_anchor)
+            )
+        elif consecutive_len == 2:
+            predicted = (
+                recent_anchor * 0.55 +
+                recent_trend_projection * 0.15 +
+                naive_projection * 0.10 +
+                base_projection * 0.15 +
+                (long_trend_projection * 0.05 if long_trend_projection is not None else 0.05 * last_cutoff)
             )
         else:
             predicted = (
-                recent_trend_projection * 0.55 +
-                naive_projection * 0.30 +
-                (last_cutoff * (1.0 + fallback_pct)) * 0.15
+                last_cutoff * 0.70 +
+                recent_trend_projection * 0.10 +
+                naive_projection * 0.05 +
+                base_projection * 0.10 +
+                (long_trend_projection * 0.05 if long_trend_projection is not None else 0.05 * last_cutoff)
             )
 
-        lower_bound = last_cutoff * 0.80
+        recent_floor_source = float(np.min(consecutive_cutoffs[-2:])) if consecutive_len >= 2 else last_cutoff
+        lower_bound = recent_floor_source * 0.95
         upper_bound = last_cutoff * 1.35
         return max(1.0, float(np.clip(predicted, lower_bound, upper_bound)))
