@@ -81,6 +81,12 @@ Run only the app with the latest saved model:
 python app/main.py
 ```
 
+Run the web interface:
+
+```bash
+streamlit run web_app.py
+```
+
 ## Inspect The Saved Model
 
 Use the helper script:
@@ -121,6 +127,7 @@ The app also resolves common branch aliases like `CSE`, `CSE-AIML`, `AIML`, `ISE
 - Consistent branch display codes in results, so common branches now show expected labels like `CSE`, `ISE`, `ECE`, `AIML`, and `ETCE`.
 - Cleaner terminal prompts and safer exit handling for `quit`, `Ctrl+C`, and `Ctrl+D`.
 - The UI reads model metadata from the saved bundle and shows covered colleges and trend years on startup.
+- Added a Streamlit web interface in `web_app.py` for browser-based predictions and CSV download.
 
 ## Notes
 
