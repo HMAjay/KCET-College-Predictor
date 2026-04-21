@@ -15,8 +15,6 @@ data/extracted/
 data/cleaned/
 data/final/
 
-# Trained model (large binary)
-models/kcet_model.pkl
 
 # Jupyter
 .ipynb_checkpoints/
