@@ -330,7 +330,6 @@ def render_overview(metadata: dict, predictor: KCETPredictor) -> None:
                 <div class="pill">Prediction target: {metadata.get('target_year', predictor.target_year)}</div>
                 <div class="pill">Colleges covered: {metadata.get('n_colleges', 'N/A')}</div>
                 <div class="pill">Based on previous cutoff trends</div>
-                <div class="pill">Download official cutoff PDFs from the sidebar</div>
             </div>
         </div>
         """,
@@ -340,6 +339,10 @@ def render_overview(metadata: dict, predictor: KCETPredictor) -> None:
 
 def render_sidebar(metadata: dict, predictor: KCETPredictor) -> None:
     with st.sidebar:
+        st.subheader("Download Cutoffs")
+        st.caption("Use the sections below to download official KEA PDFs.")
+        st.markdown("---")
+
         st.header("What's Inside")
         st.metric("Target Year", metadata.get("target_year", predictor.target_year))
         st.metric("Colleges Covered", metadata.get("n_colleges", "N/A"))
