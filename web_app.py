@@ -363,7 +363,7 @@ def render_sidebar(metadata: dict, predictor: KCETPredictor) -> None:
 
         if cutoff_2024_pdf.exists():
             st.download_button(
-                "Download 2024 KCET Cutoff PDF",
+                "2024 KCET Official Cutoff PDF",
                 data=load_file_bytes(str(cutoff_2024_pdf)),
                 file_name="KCET 2024 Official Cutoff.pdf",
                 mime="application/pdf",
@@ -375,7 +375,7 @@ def render_sidebar(metadata: dict, predictor: KCETPredictor) -> None:
 
         if cutoff_2025_pdf.exists():
             st.download_button(
-                "Download 2025 KCET Official Cutoff PDF",
+                "2025 KCET Official Cutoff PDF",
                 data=load_file_bytes(str(cutoff_2025_pdf)),
                 file_name="KCET 2025 Official Cutoff.pdf",
                 mime="application/pdf",
