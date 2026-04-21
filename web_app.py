@@ -10,6 +10,9 @@ import streamlit as st
 from src.model.predictor import KCETPredictor
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent
+
+
 st.set_page_config(
     page_title="KCET College Predictor",
     page_icon="🎓",
@@ -47,9 +50,13 @@ def load_file_bytes(path: str) -> bytes:
 
 def resolve_existing_file(*candidate_paths: str) -> Path | None:
     for candidate in candidate_paths:
-        path = Path(candidate)
-        if path.exists():
-            return path
+        direct_path = Path(candidate)
+        if direct_path.exists():
+            return direct_path
+
+        project_relative_path = PROJECT_ROOT / candidate
+        if project_relative_path.exists():
+            return project_relative_path
     return None
 
 

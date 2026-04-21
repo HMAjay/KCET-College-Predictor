@@ -10,7 +10,14 @@ dist/
 build/
 
 # Data — raw PDFs and generated files (large)
-data/raw/
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/KCET 2024 FIRST ROUND.pdf
+!data/raw/KCET 2024 SECOND ROUND.pdf
+!data/raw/KCET 2024 Cutoff.pdf
+!data/raw/KCET 2025 FIRST ROUND.pdf
+!data/raw/KCET 2025 SECOND ROUND.pdf
+!data/raw/KCET 2025 Cutoff.pdf
 data/extracted/
 data/cleaned/
 data/final/
