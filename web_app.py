@@ -45,6 +45,14 @@ def load_file_bytes(path: str) -> bytes:
     return Path(path).read_bytes()
 
 
+def resolve_existing_file(*candidate_paths: str) -> Path | None:
+    for candidate in candidate_paths:
+        path = Path(candidate)
+        if path.exists():
+            return path
+    return None
+
+
 def inject_styles() -> None:
     st.markdown(
         """
@@ -357,43 +365,130 @@ def render_sidebar(metadata: dict, predictor: KCETPredictor) -> None:
             render_branch_list(all_branch_labels)
 
         st.markdown("---")
-        st.caption("Download Cutoffs (Official KEA 2nd Round Extended PDFs)")
-        cutoff_2024_pdf = Path("data/raw/KCET 2024 Cutoff.pdf")
-        cutoff_2025_pdf = Path("data/raw/KCET 2025 Cutoff.pdf")
+        st.caption("Download Cutoffs (Official KEA First Round PDFs)")
 
-        if cutoff_2024_pdf.exists():
+        first_round_2024_pdf = resolve_existing_file(
+            "data/raw/KCET 2024 FIRST ROUND.pdf",
+            "data/raw/KCET_2024_FIRST_ROUND.pdf",
+            "data/raw/KCET 2024 First Round.pdf",
+            "data/raw/KCET 2024 Cutoff.pdf",
+        )
+        first_round_2025_pdf = resolve_existing_file(
+            "data/raw/KCET 2025 FIRST ROUND.pdf",
+            "data/raw/KCET_2025_FIRST_ROUND.pdf",
+            "data/raw/KCET 2025 First Round.pdf",
+            "data/raw/KCET 2025 Cutoff.pdf",
+        )
+
+        if first_round_2024_pdf is not None:
             st.download_button(
-                "2024 KCET Official Cutoff PDF",
-                data=load_file_bytes(str(cutoff_2024_pdf)),
-                file_name="KCET 2024 Official Cutoff.pdf",
+                "KCET 2024 FIRST ROUND PDF",
+                data=load_file_bytes(str(first_round_2024_pdf)),
+                file_name="KCET 2024 FIRST ROUND.pdf",
                 mime="application/pdf",
-                key="sidebar_download_2024_raw_pdf",
+                key="sidebar_download_2024_first_round_pdf",
                 use_container_width=True,
             )
         else:
-            st.caption("KCET 2024 raw PDF not found.")
+            st.caption("KCET 2024 FIRST ROUND.pdf not found in data/raw.")
 
-        if cutoff_2025_pdf.exists():
+        if first_round_2025_pdf is not None:
             st.download_button(
-                "2025 KCET Official Cutoff PDF",
-                data=load_file_bytes(str(cutoff_2025_pdf)),
-                file_name="KCET 2025 Official Cutoff.pdf",
+                "KCET 2025 FIRST ROUND PDF",
+                data=load_file_bytes(str(first_round_2025_pdf)),
+                file_name="KCET 2025 FIRST ROUND.pdf",
                 mime="application/pdf",
-                key="sidebar_download_2025_raw_pdf",
+                key="sidebar_download_2025_first_round_pdf",
                 use_container_width=True,
             )
         else:
-            st.caption("KCET 2025 raw PDF not found.")
+            st.caption("KCET 2025 FIRST ROUND.pdf not found in data/raw.")
+
+        st.markdown("---")
+        st.caption("Download Cutoffs (Official KEA Second Round PDFs)")
+
+        second_round_2024_pdf = resolve_existing_file(
+            "data/raw/KCET 2024 SECOND ROUND.pdf",
+            "data/raw/KCET_2024_SECOND_ROUND.pdf",
+            "data/raw/KCET 2024 Cutoff.pdf",
+        )
+        second_round_2025_pdf = resolve_existing_file(
+            "data/raw/KCET 2025 SECOND ROUND.pdf",
+            "data/raw/KCET_2025_SECOND_ROUND.pdf",
+            "data/raw/KCET 2025 Cutoff.pdf",
+        )
+
+        if second_round_2024_pdf is not None:
+            st.download_button(
+                "KCET 2024 SECOND ROUND PDF",
+                data=load_file_bytes(str(second_round_2024_pdf)),
+                file_name="KCET 2024 SECOND ROUND.pdf",
+                mime="application/pdf",
+                key="sidebar_download_2024_second_round_pdf",
+                use_container_width=True,
+            )
+        else:
+            st.caption("KCET 2024 SECOND ROUND.pdf not found in data/raw.")
+
+        if second_round_2025_pdf is not None:
+            st.download_button(
+                "KCET 2025 SECOND ROUND PDF",
+                data=load_file_bytes(str(second_round_2025_pdf)),
+                file_name="KCET 2025 SECOND ROUND.pdf",
+                mime="application/pdf",
+                key="sidebar_download_2025_second_round_pdf",
+                use_container_width=True,
+            )
+        else:
+            st.caption("KCET 2025 SECOND ROUND.pdf not found in data/raw.")
+
+        st.markdown("---")
+        st.caption("Download Cutoffs (Official KEA Second Round Extended PDFs)")
+
+        second_round_extended_2024_pdf = resolve_existing_file(
+            "data/raw/KCET 2024 Cutoff.pdf",
+            "data/raw/KCET_2024_Cutoff.pdf",
+            "data/raw/KCET 2024 CUTOFF.pdf",
+        )
+        second_round_extended_2025_pdf = resolve_existing_file(
+            "data/raw/KCET 2025 Cutoff.pdf",
+            "data/raw/KCET2025 Cutoff.pdf",
+            "data/raw/KCET_2025_Cutoff.pdf",
+            "data/raw/KCET 2025 CUTOFF.pdf",
+        )
+
+        if second_round_extended_2024_pdf is not None:
+            st.download_button(
+                "KCET 2024 THIRD ROUND PDF",
+                data=load_file_bytes(str(second_round_extended_2024_pdf)),
+                file_name="KCET 2024 2nd Round Extended Cutoff.pdf",
+                mime="application/pdf",
+                key="sidebar_download_2024_second_round_extended_pdf",
+                use_container_width=True,
+            )
+        else:
+            st.caption("KCET 2024 Cutoff.pdf not found in data/raw.")
+
+        if second_round_extended_2025_pdf is not None:
+            st.download_button(
+                "KCET 2025 THIRD ROUND PDF",
+                data=load_file_bytes(str(second_round_extended_2025_pdf)),
+                file_name="KCET 2025 2nd Round Extended Cutoff.pdf",
+                mime="application/pdf",
+                key="sidebar_download_2025_second_round_extended_pdf",
+                use_container_width=True,
+            )
+        else:
+            st.caption("KCET 2025 Cutoff.pdf not found in data/raw.")
 
 
 def render_predictor(predictor: KCETPredictor) -> None:
     st.markdown(
         """
         <div class="section-card">
-            <div class="section-title">Predict Your Options</div>
+            <div class="section-title">Note:</div>
             <p class="section-copy">
-                Enter your rank, choose your category, and search by your preferred branch name or code such as
-                CSE, ISE, ECE, AIML, ETCE, or Information Science.
+                The dataset fed into the model is only of KCET 2nd Round Extended so it only predicts the cutoffs based on the previous years' 2nd Round Extended / 3rd Round Cutoffs.
             </p>
         </div>
         """,
