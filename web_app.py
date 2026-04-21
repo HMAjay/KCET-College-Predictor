@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 import streamlit as st
 
@@ -36,6 +38,11 @@ def build_results_frame(results: list[dict]) -> pd.DataFrame:
     ]
     available_columns = [column for column in preferred_columns if column in frame.columns]
     return frame[available_columns]
+
+
+@st.cache_data
+def load_file_bytes(path: str) -> bytes:
+    return Path(path).read_bytes()
 
 
 def inject_styles() -> None:
@@ -348,6 +355,35 @@ def render_sidebar(metadata: dict, predictor: KCETPredictor) -> None:
         render_branch_list(prioritized_branches)
         with st.expander("View all"):
             render_branch_list(all_branch_labels)
+
+        st.markdown("---")
+        st.caption("Download Cutoffs (Official KEA 2nd Round Extended PDFs)")
+        cutoff_2024_pdf = Path("data/raw/KCET 2024 Cutoff.pdf")
+        cutoff_2025_pdf = Path("data/raw/KCET 2025 Cutoff.pdf")
+
+        if cutoff_2024_pdf.exists():
+            st.download_button(
+                "Download 2024 Raw PDF",
+                data=load_file_bytes(str(cutoff_2024_pdf)),
+                file_name="KCET 2024 Official Cutoff.pdf",
+                mime="application/pdf",
+                key="sidebar_download_2024_raw_pdf",
+                use_container_width=True,
+            )
+        else:
+            st.caption("KCET 2024 raw PDF not found.")
+
+        if cutoff_2025_pdf.exists():
+            st.download_button(
+                "Download 2025 Raw PDF",
+                data=load_file_bytes(str(cutoff_2025_pdf)),
+                file_name="KCET 2025 Official Cutoff.pdf",
+                mime="application/pdf",
+                key="sidebar_download_2025_raw_pdf",
+                use_container_width=True,
+            )
+        else:
+            st.caption("KCET 2025 raw PDF not found.")
 
 
 def render_predictor(predictor: KCETPredictor) -> None:
