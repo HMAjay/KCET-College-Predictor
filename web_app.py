@@ -324,7 +324,7 @@ def render_overview(metadata: dict, predictor: KCETPredictor) -> None:
 
 def render_sidebar(metadata: dict, predictor: KCETPredictor) -> None:
     with st.sidebar:
-        st.header("Dataset Snapshot")
+        st.header("What's Inside")
         st.metric("Target Year", metadata.get("target_year", predictor.target_year))
         st.metric("Colleges Covered", metadata.get("n_colleges", "N/A"))
         st.metric("Categories", len(predictor.available_categories))
