@@ -512,7 +512,20 @@ class KCETPredictor:
         if hasattr(self, "df"):
             source_df = self.df.copy()
         else:
-            source_df = load_master().copy()
+            try:
+                source_df = load_master().copy()
+            except FileNotFoundError:
+                # Streamlit Cloud deploys can run with only the saved model bundle.
+                # Fall back to trend data when the raw master CSV is unavailable.
+                source_df = self.trend_df.copy()
+                if "Predicted_Cutoff" in source_df.columns and "Cutoff_Rank" not in source_df.columns:
+                    source_df["Cutoff_Rank"] = source_df["Predicted_Cutoff"]
+                if "Category" not in source_df.columns and "Category_upper" in source_df.columns:
+                    source_df["Category"] = source_df["Category_upper"]
+                if "Branch" not in source_df.columns:
+                    source_df["Branch"] = ""
+                if "College_Code" not in source_df.columns:
+                    source_df["College_Code"] = ""
 
         source_df["Category_upper"] = source_df["Category"].astype(str).str.upper()
         source_df["Canonical_Branch"] = source_df["Branch"].map(_canonical_branch)
