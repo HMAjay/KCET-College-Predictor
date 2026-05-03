@@ -100,5 +100,6 @@ def merge_all():
     print(f"   Years      : {sorted(master['Year'].dropna().unique().tolist())}\n")
 
 
+# ─────────────────────────────────────────────
 if __name__ == "__main__":
     merge_all()
