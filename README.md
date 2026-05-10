@@ -1,5 +1,64 @@
 # KCET College Predictor
 
+Lightweight pipeline and web app for collecting, cleaning, merging, and using KCET college cutoff data to predict admissions.
+
+## Features
+- Extracts cutoff data from raw sources and cleans yearly CSVs
+- Merges cleaned yearly files into a master dataset (`data/final/kcet_master.csv`)
+- Trains and serves a prediction model via a simple web UI
+
+## Repository Structure
+
+- `src/` — data pipeline and model code
+  - `src/data/` — extraction, cleaning, merging, and transform scripts
+  - `src/model/` — training and predictor logic
+  - `src/utils/` — helper utilities
+- `data/` — project datasets
+  - `cleaned/` — cleaned yearly CSVs (output of cleaning step)
+  - `final/` — output master CSV (`kcet_master.csv`)
+  - `raw/`, `extracted/` — upstream raw files
+- `models/` — trained model artifacts
+- `web_app.py` and `app/main.py` — web UI entrypoints
+- `run_pipeline.py` — convenience script to run the full data pipeline
+
+## Quickstart
+
+1. Create a virtual environment and install dependencies:
+
+```bash
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+2. Run the data pipeline (extract → clean → merge):
+
+```bash
+python run_pipeline.py
+```
+
+This will read raw/extracted files, create cleaned CSVs in `data/cleaned/`, and write the master dataset to `data/final/kcet_master.csv`.
+
+3. (Optional) Run the web app locally:
+
+```bash
+python web_app.py
+```
+
+Open the UI in your browser at the address printed by the app.
+
+## Development notes
+- If you only want to merge cleaned files, run `python src/data/merge_data.py`.
+- The pipeline expects yearly cleaned CSVs to end with `_clean.csv` and includes a `Year` inferred from the filename.
+- See `src/data/merge_data.py` for data quality checks and filtering behavior.
+
+## Contributing
+PRs are welcome — please open issues for feature requests or bugs.
+
+## License
+This project does not include a license file. Add one if you plan to publish.
+# KCET College Predictor
+
 This project builds a **2026 cutoff predictor** from KCET cutoff data for
 **2021-2025**. Instead of returning mixed historical rows, it projects a single
 cutoff for each college, branch, and category combination, then compares your
